@@ -1,0 +1,13 @@
+{
+  "name": "dang-ky-diem-root",
+  "version": "1.0.0",
+  "description": "Web app tiếp nhận điểm thi năng khiếu",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install-backend": "cd backend && npm install"
+  },
+  "keywords": ["web app", "education", "exam", "registration"],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký điểm thi năng khiếu - Vẽ Mỹ thuật</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 30px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-container, .admin-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #e0e0e0;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-name {
+            display: inline-block;
+            margin-left: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .lookup-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .lookup-result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .lookup-result h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .lookup-result p {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .lookup-result strong {
+            color: #333;
+            display: inline-block;
+            min-width: 150px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-tab {
+                min-width: 100%;
+            }
+
+            .form-container, .admin-container, .lookup-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Hệ thống tiếp nhận điểm thi năng khiếu</h1>
+            <p>Tổ hợp có môn Vẽ Mỹ thuật</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('register')">📝 Đăng ký</button>
+            <button class="nav-tab" onclick="showTab('lookup')">🔍 Tra cứu</button>
+            <button class="nav-tab" onclick="showTab('admin')">⚙️ Quản lý</button>
+        </div>
+
+        <!-- Tab Đăng ký -->
+        <div id="register" class="tab-content active">
+            <div class="form-container">
+                <h2 style="color: #667eea; margin-bottom: 30px;">Đăng ký điểm thi năng khiếu</h2>
+                
+                <div id="registerMessage"></div>
+
+                <form id="registerForm" onsubmit="submitRegister(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Họ và tên <span style="color: red;">*</span></label>
+                            <input type="text" id="hoTen" name="hoTen" required placeholder="Nguyễn Văn A">
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày sinh <span style="color: red;">*</span></label>
+                            <input type="date" id="ngaySinh" name="ngaySinh" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số CCCD <span style="color: red;">*</span></label>
+                        <input type="text" id="soCCCD" name="soCCCD" required placeholder="001234567890" pattern="[0-9]{9,12}">
+                        <small style="color: #666;">Nhập 9-12 chữ số</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Điểm Năng khiếu 1 <span style="color: red;">*</span></label>
+                            <input type="number" id="diemNK1" name="diemNK1" required min="0" max="10" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Điểm Năng khiếu 2 <span style="color: red;">*</span></label>
+                            <input type="number" id="diemNK2" name="diemNK2" required min="0" max="10" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Minh chứng (Ảnh/PDF, tối đa 5MB)</label>
+                        <label for="minhChung" class="file-input-label">
+                            📎 Chọn file
+                        </label>
+                        <input type="file" id="minhChung" name="minhChung" accept="image/*,.pdf" onchange="updateFileName(this)">
+                        <span class="file-name" id="fileName">Chưa chọn file</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Đăng ký</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tab Tra cứu -->
+        <div id="lookup" class="tab-content">
+            <div class="lookup-container">
+                <h2 style="color: #667eea; margin-bottom: 30px;">Tra cứu thông tin</h2>
+                
+                <div id="lookupMessage"></div>
+
+                <div class="form-group">
+                    <label>Nhập số CCCD</label>
+                    <input type="text" id="lookupCCCD" placeholder="001234567890">
+                </div>
+
+                <button class="btn btn-primary" onclick="lookupStudent()">Tra cứu</button>
+
+                <div id="lookupResult" style="display: none;" class="lookup-result"></div>
+            </div>
+        </div>
+
+        <!-- Tab Quản lý -->
+        <div id="admin" class="tab-content">
+            <div class="admin-container">
+                <h2 style="color: #667eea; margin-bottom: 30px;">Quản lý thí sinh</h2>
+
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3 id="totalCount">0</h3>
+                        <p>Tổng số thí sinh</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <h3 id="pendingCount">0</h3>
+                        <p>Chờ duyệt</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <h3 id="approvedCount">0</h3>
+                        <p>Đã duyệt</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <h3 id="rejectedCount">0</h3>
+                        <p>Không duyệt</p>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="studentTable">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Họ tên</th>
+                                <th>Ngày sinh</th>
+                                <th>Số CCCD</th>
+                                <th>Điểm NK1</th>
+                                <th>Điểm NK2</th>
+                                <th>Điểm TB</th>
+                                <th>Trạng thái</th>
+                                <th>Minh chứng</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <tr>
+                                <td colspan="10" style="text-align: center; padding: 40px;">
+                                    Đang tải dữ liệu...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal duyệt -->
+    <div id="approvalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Duyệt hồ sơ</h2>
+            </div>
+            <div class="form-group">
+                <label>Trạng thái</label>
+                <select id="modalStatus">
+                    <option value="Đã duyệt">Đã duyệt</option>
+                    <option value="Không duyệt">Không duyệt</option>
+                    <option value="Chờ duyệt">Chờ duyệt</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea id="modalNote" rows="3" placeholder="Nhập ghi chú (nếu có)"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-success" onclick="saveApproval()" style="flex: 1;">Lưu</button>
+                <button class="btn btn-danger" onclick="closeModal()" style="flex: 1;">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-detect API URL based on environment
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : `${window.location.origin}/api`;
+        let currentStudentId = null;
+
+        // Chuyển tab
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const navTabs = document.querySelectorAll('.nav-tab');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            navTabs.forEach(nav => nav.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'admin') {
+                loadStudents();
+                loadStatistics();
+            }
+        }
+
+        // Cập nhật tên file
+        function updateFileName(input) {
+            const fileName = input.files[0] ? input.files[0].name : 'Chưa chọn file';
+            document.getElementById('fileName').textContent = fileName;
+        }
+
+        // Đăng ký thí sinh
+        async function submitRegister(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const messageDiv = document.getElementById('registerMessage');
+            
+            try {
+                const response = await fetch(`${API_URL}/students`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    messageDiv.innerHTML = `<div class="alert alert-success">✅ ${data.message}</div>`;
+                    event.target.reset();
+                    document.getElementById('fileName').textContent = 'Chưa chọn file';
+                } else {
+                    messageDiv.innerHTML = `<div class="alert alert-error">❌ ${data.message}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="alert alert-error">❌ Lỗi kết nối server!</div>`;
+                console.error('Error:', error);
+            }
+
+            // Tự động ẩn thông báo sau 5 giây
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Tra cứu thí sinh
+        async function lookupStudent() {
+            const cccd = document.getElementById('lookupCCCD').value.trim();
+            const messageDiv = document.getElementById('lookupMessage');
+            const resultDiv = document.getElementById('lookupResult');
+
+            if (!cccd) {
+                messageDiv.innerHTML = `<div class="alert alert-error">❌ Vui lòng nhập số CCCD!</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/students/lookup/${cccd}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const student = data.data;
+                    const statusBadge = getStatusBadge(student.trangThai);
+                    
+                    resultDiv.innerHTML = `
+                        <h3>Thông tin thí sinh</h3>
+                        <p><strong>Họ tên:</strong> ${student.hoTen}</p>
+                        <p><strong>Ngày sinh:</strong> ${formatDate(student.ngaySinh)}</p>
+                        <p><strong>Số CCCD:</strong> ${student.soCCCD}</p>
+                        <p><strong>Điểm Năng khiếu 1:</strong> ${student.diemNK1}</p>
+                        <p><strong>Điểm Năng khiếu 2:</strong> ${student.diemNK2}</p>
+                        <p><strong>Điểm trung bình:</strong> ${student.diemTB}</p>
+                        <p><strong>Trạng thái:</strong> ${statusBadge}</p>
+                        <p><strong>Ngày nộp:</strong> ${formatDateTime(student.ngayNop)}</p>
+                        ${student.ghiChu ? `<p><strong>Ghi chú:</strong> ${student.ghiChu}</p>` : ''}
+                    `;
+                    resultDiv.style.display = 'block';
+                    messageDiv.innerHTML = '';
+                } else {
+                    messageDiv.innerHTML = `<div class="alert alert-error">❌ ${data.message}</div>`;
+                    resultDiv.style.display = 'none';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="alert alert-error">❌ Lỗi kết nối server!</div>`;
+                console.error('Error:', error);
+            }
+        }
+
+        // Load danh sách thí sinh
+        async function loadStudents() {
+            try {
+                const response = await fetch(`${API_URL}/students`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const tbody = document.getElementById('studentTableBody');
+                    
+                    if (data.data.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+                                    Chưa có thí sinh nào đăng ký
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    tbody.innerHTML = data.data.map((student, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${student.hoTen}</td>
+                            <td>${formatDate(student.ngaySinh)}</td>
+                            <td>${student.soCCCD}</td>
+                            <td>${student.diemNK1}</td>
+                            <td>${student.diemNK2}</td>
+                            <td><strong>${student.diemTB}</strong></td>
+                            <td>${getStatusBadge(student.trangThai)}</td>
+                            <td>
+                                ${student.minhChung ? 
+                                    `<a href="${API_URL.replace('/api', '')}${student.minhChung}" target="_blank">Xem</a>` : 
+                                    'Không có'}
+                            </td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="openApprovalModal('${student.id}')">
+                                    Duyệt
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteStudent('${student.id}')">
+                                    Xóa
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Load thống kê
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_URL}/statistics`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('totalCount').textContent = data.data.total;
+                    document.getElementById('pendingCount').textContent = data.data.pending;
+                    document.getElementById('approvedCount').textContent = data.data.approved;
+                    document.getElementById('rejectedCount').textContent = data.data.rejected;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Mở modal duyệt
+        function openApprovalModal(studentId) {
+            currentStudentId = studentId;
+            document.getElementById('approvalModal').classList.add('active');
+        }
+
+        // Đóng modal
+        function closeModal() {
+            document.getElementById('approvalModal').classList.remove('active');
+            currentStudentId = null;
+        }
+
+        // Lưu duyệt
+        async function saveApproval() {
+            const status = document.getElementById('modalStatus').value;
+            const note = document.getElementById('modalNote').value;
+
+            try {
+                const response = await fetch(`${API_URL}/students/${currentStudentId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        trangThai: status,
+                        ghiChu: note
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ Cập nhật trạng thái thành công!');
+                    closeModal();
+                    loadStudents();
+                    loadStatistics();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Lỗi kết nối server!');
+                console.error('Error:', error);
+            }
+        }
+
+        // Xóa thí sinh
+        async function deleteStudent(studentId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa thí sinh này?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/students/${studentId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ Xóa thành công!');
+                    loadStudents();
+                    loadStatistics();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Lỗi kết nối server!');
+                console.error('Error:', error);
+            }
+        }
+
+        // Helper functions
+        function getStatusBadge(status) {
+            const badgeClass = status === 'Đã duyệt' ? 'badge-approved' : 
+                              status === 'Không duyệt' ? 'badge-rejected' : 'badge-pending';
+            return `<span class="badge ${badgeClass}">${status}</span>`;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('vi-VN');
+        }
+
+        // Đóng modal khi click bên ngoài
+        window.onclick = function(event) {
+            const modal = document.getElementById('approvalModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
