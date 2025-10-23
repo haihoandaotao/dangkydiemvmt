@@ -381,12 +381,13 @@
         <div class="header">
             <h1>🎨 Hệ thống tiếp nhận điểm thi năng khiếu</h1>
             <p>Tổ hợp có môn Vẽ Mỹ thuật</p>
+            <div id="adminStatus" style="margin-top: 10px;"></div>
         </div>
 
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showTab('register')">📝 Đăng ký</button>
             <button class="nav-tab" onclick="showTab('lookup')">🔍 Tra cứu</button>
-            <button class="nav-tab" onclick="showTab('admin')">⚙️ Quản lý</button>
+            <button id="adminTab" class="nav-tab" onclick="showTab('admin')" style="display: none;">⚙️ Quản lý</button>
         </div>
 
         <!-- Tab Đăng ký -->
@@ -412,6 +413,18 @@
                         <label>Số CCCD <span style="color: red;">*</span></label>
                         <input type="text" id="soCCCD" name="soCCCD" required placeholder="001234567890" pattern="[0-9]{9,12}">
                         <small style="color: #666;">Nhập 9-12 chữ số</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email <span style="color: red;">*</span></label>
+                            <input type="email" id="email" name="email" required placeholder="example@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại <span style="color: red;">*</span></label>
+                            <input type="tel" id="soDienThoai" name="soDienThoai" required placeholder="0912345678" pattern="[0-9]{10,11}">
+                            <small style="color: #666;">Nhập 10-11 chữ số</small>
+                        </div>
                     </div>
 
                     <div class="form-row">
@@ -489,6 +502,8 @@
                                 <th>Họ tên</th>
                                 <th>Ngày sinh</th>
                                 <th>Số CCCD</th>
+                                <th>Email</th>
+                                <th>SĐT</th>
                                 <th>Điểm NK1</th>
                                 <th>Điểm NK2</th>
                                 <th>Điểm TB</th>
@@ -499,13 +514,35 @@
                         </thead>
                         <tbody id="studentTableBody">
                             <tr>
-                                <td colspan="10" style="text-align: center; padding: 40px;">
+                                <td colspan="12" style="text-align: center; padding: 40px;">
                                     Đang tải dữ liệu...
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal đăng nhập Admin -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔐 Đăng nhập Admin</h2>
+            </div>
+            <div id="loginMessage"></div>
+            <div class="form-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="loginUsername" placeholder="admin">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="loginPassword" placeholder="Nhập mật khẩu">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-success" onclick="submitLogin()" style="flex: 1;">Đăng nhập</button>
+                <button class="btn btn-danger" onclick="closeLoginModal()" style="flex: 1;">Hủy</button>
             </div>
         </div>
     </div>
@@ -540,10 +577,158 @@
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3000/api' 
             : `${window.location.origin}/api`;
+        
+        // Admin session
+        let adminToken = localStorage.getItem('adminToken');
+        let isAdmin = false;
         let currentStudentId = null;
+
+        // Kiểm tra trạng thái admin khi load trang
+        async function checkAdminStatus() {
+            if (!adminToken) {
+                updateAdminUI(false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/admin/check`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success && data.isAdmin) {
+                    isAdmin = true;
+                    updateAdminUI(true);
+                } else {
+                    adminToken = null;
+                    localStorage.removeItem('adminToken');
+                    updateAdminUI(false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                updateAdminUI(false);
+            }
+        }
+
+        // Cập nhật UI theo trạng thái admin
+        function updateAdminUI(loggedIn) {
+            const adminTab = document.getElementById('adminTab');
+            const adminStatus = document.getElementById('adminStatus');
+            
+            if (loggedIn) {
+                adminTab.style.display = 'block';
+                adminStatus.innerHTML = `
+                    <span style="color: #28a745; font-weight: 600;">
+                        ✅ Đăng nhập với quyền Admin
+                        <button onclick="logout()" style="margin-left: 10px; padding: 5px 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Đăng xuất
+                        </button>
+                    </span>
+                `;
+            } else {
+                adminTab.style.display = 'none';
+                adminStatus.innerHTML = `
+                    <button onclick="openLoginModal()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                        🔐 Đăng nhập Admin
+                    </button>
+                `;
+            }
+        }
+
+        // Mở modal đăng nhập
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('loginMessage').innerHTML = '';
+        }
+
+        // Đóng modal đăng nhập
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // Submit đăng nhập
+        async function submitLogin() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+
+            if (!username || !password) {
+                messageDiv.innerHTML = '<div class="alert alert-error">❌ Vui lòng nhập đầy đủ thông tin!</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    adminToken = data.data.token;
+                    localStorage.setItem('adminToken', adminToken);
+                    isAdmin = true;
+                    
+                    messageDiv.innerHTML = '<div class="alert alert-success">✅ Đăng nhập thành công!</div>';
+                    
+                    setTimeout(() => {
+                        closeLoginModal();
+                        updateAdminUI(true);
+                        showTab('admin');
+                    }, 1000);
+                } else {
+                    messageDiv.innerHTML = `<div class="alert alert-error">❌ ${data.message}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="alert alert-error">❌ Lỗi kết nối server!</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        // Đăng xuất
+        async function logout() {
+            if (!confirm('Bạn có chắc muốn đăng xuất?')) {
+                return;
+            }
+
+            try {
+                await fetch(`${API_URL}/admin/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+            adminToken = null;
+            isAdmin = false;
+            localStorage.removeItem('adminToken');
+            updateAdminUI(false);
+            
+            // Chuyển về tab đăng ký
+            showTab('register');
+            
+            alert('✅ Đã đăng xuất!');
+        }
 
         // Chuyển tab
         function showTab(tabName) {
+            // Kiểm tra quyền truy cập tab admin
+            if (tabName === 'admin' && !isAdmin) {
+                openLoginModal();
+                return;
+            }
+
             const tabs = document.querySelectorAll('.tab-content');
             const navTabs = document.querySelectorAll('.nav-tab');
             
@@ -622,6 +807,8 @@
                         <p><strong>Họ tên:</strong> ${student.hoTen}</p>
                         <p><strong>Ngày sinh:</strong> ${formatDate(student.ngaySinh)}</p>
                         <p><strong>Số CCCD:</strong> ${student.soCCCD}</p>
+                        <p><strong>Email:</strong> ${student.email || 'N/A'}</p>
+                        <p><strong>Số điện thoại:</strong> ${student.soDienThoai || 'N/A'}</p>
                         <p><strong>Điểm Năng khiếu 1:</strong> ${student.diemNK1}</p>
                         <p><strong>Điểm Năng khiếu 2:</strong> ${student.diemNK2}</p>
                         <p><strong>Điểm trung bình:</strong> ${student.diemTB}</p>
@@ -644,7 +831,11 @@
         // Load danh sách thí sinh
         async function loadStudents() {
             try {
-                const response = await fetch(`${API_URL}/students`);
+                const response = await fetch(`${API_URL}/students`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
                 const data = await response.json();
 
                 if (data.success) {
@@ -653,7 +844,7 @@
                     if (data.data.length === 0) {
                         tbody.innerHTML = `
                             <tr>
-                                <td colspan="10" style="text-align: center; padding: 40px; color: #999;">
+                                <td colspan="12" style="text-align: center; padding: 40px; color: #999;">
                                     Chưa có thí sinh nào đăng ký
                                 </td>
                             </tr>
@@ -667,6 +858,8 @@
                             <td>${student.hoTen}</td>
                             <td>${formatDate(student.ngaySinh)}</td>
                             <td>${student.soCCCD}</td>
+                            <td>${student.email || 'N/A'}</td>
+                            <td>${student.soDienThoai || 'N/A'}</td>
                             <td>${student.diemNK1}</td>
                             <td>${student.diemNK2}</td>
                             <td><strong>${student.diemTB}</strong></td>
@@ -695,7 +888,11 @@
         // Load thống kê
         async function loadStatistics() {
             try {
-                const response = await fetch(`${API_URL}/statistics`);
+                const response = await fetch(`${API_URL}/statistics`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
                 const data = await response.json();
 
                 if (data.success) {
@@ -730,7 +927,8 @@
                 const response = await fetch(`${API_URL}/students/${currentStudentId}/status`, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
                     },
                     body: JSON.stringify({
                         trangThai: status,
@@ -762,7 +960,10 @@
 
             try {
                 const response = await fetch(`${API_URL}/students/${studentId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
                 });
 
                 const data = await response.json();
@@ -800,10 +1001,19 @@
         // Đóng modal khi click bên ngoài
         window.onclick = function(event) {
             const modal = document.getElementById('approvalModal');
+            const loginModal = document.getElementById('loginModal');
             if (event.target === modal) {
                 closeModal();
             }
+            if (event.target === loginModal) {
+                closeLoginModal();
+            }
         }
+
+        // Khởi tạo khi load trang
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAdminStatus();
+        });
     </script>
 </body>
 </html>

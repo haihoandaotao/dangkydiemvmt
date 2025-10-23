@@ -9,14 +9,47 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Cấu hình Admin
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'admin123'; // Nên thay đổi mật khẩu này!
+
+// Session store đơn giản (trong production nên dùng Redis hoặc database)
+const sessions = new Map();
+
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Middleware kiểm tra admin
+function requireAdmin(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token || !sessions.has(token)) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Unauthorized - Vui lòng đăng nhập admin!' 
+    });
+  }
+  
+  const session = sessions.get(token);
+  if (Date.now() > session.expiresAt) {
+    sessions.delete(token);
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Session hết hạn - Vui lòng đăng nhập lại!' 
+    });
+  }
+  
+  next();
+}
 
 // Cấu hình multer để upload file
 const storage = multer.diskStorage({
@@ -75,16 +108,96 @@ function writeDatabase(data) {
 
 // API Routes
 
+// 0. Đăng nhập Admin
+app.post('/api/admin/login', (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      const token = uuidv4();
+      const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 giờ
+      
+      sessions.set(token, {
+        username,
+        expiresAt
+      });
+      
+      res.json({
+        success: true,
+        message: 'Đăng nhập thành công!',
+        data: { token, expiresAt }
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: 'Tên đăng nhập hoặc mật khẩu không đúng!'
+      });
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Có lỗi xảy ra!' 
+    });
+  }
+});
+
+// 0.1. Kiểm tra trạng thái đăng nhập
+app.get('/api/admin/check', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token || !sessions.has(token)) {
+    return res.json({ success: false, isAdmin: false });
+  }
+  
+  const session = sessions.get(token);
+  if (Date.now() > session.expiresAt) {
+    sessions.delete(token);
+    return res.json({ success: false, isAdmin: false });
+  }
+  
+  res.json({ success: true, isAdmin: true });
+});
+
+// 0.2. Đăng xuất
+app.post('/api/admin/logout', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (token) {
+    sessions.delete(token);
+  }
+  
+  res.json({ success: true, message: 'Đăng xuất thành công!' });
+});
+
 // 1. Đăng ký thí sinh mới
 app.post('/api/students', upload.single('minhChung'), (req, res) => {
   try {
-    const { hoTen, ngaySinh, soCCCD, diemNK1, diemNK2 } = req.body;
+    const { hoTen, ngaySinh, soCCCD, email, soDienThoai, diemNK1, diemNK2 } = req.body;
     
     // Validate dữ liệu
-    if (!hoTen || !ngaySinh || !soCCCD || !diemNK1 || !diemNK2) {
+    if (!hoTen || !ngaySinh || !soCCCD || !email || !soDienThoai || !diemNK1 || !diemNK2) {
       return res.status(400).json({ 
         success: false, 
         message: 'Vui lòng điền đầy đủ thông tin!' 
+      });
+    }
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email không hợp lệ!' 
+      });
+    }
+
+    // Validate số điện thoại (10-11 số)
+    const phoneRegex = /^[0-9]{10,11}$/;
+    if (!phoneRegex.test(soDienThoai)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Số điện thoại phải có 10-11 chữ số!' 
       });
     }
 
@@ -110,11 +223,22 @@ app.post('/api/students', upload.single('minhChung'), (req, res) => {
       });
     }
 
+    // Kiểm tra trùng email
+    const existingEmail = db.students.find(s => s.email === email);
+    if (existingEmail) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email đã được sử dụng!' 
+      });
+    }
+
     const newStudent = {
       id: uuidv4(),
       hoTen,
       ngaySinh,
       soCCCD,
+      email,
+      soDienThoai,
       diemNK1: diem1,
       diemNK2: diem2,
       diemTB: ((diem1 + diem2) / 2).toFixed(2),
@@ -141,8 +265,8 @@ app.post('/api/students', upload.single('minhChung'), (req, res) => {
   }
 });
 
-// 2. Lấy danh sách tất cả thí sinh (cho admin)
-app.get('/api/students', (req, res) => {
+// 2. Lấy danh sách tất cả thí sinh (cho admin) - CẦN ĐĂNG NHẬP
+app.get('/api/students', requireAdmin, (req, res) => {
   try {
     const db = readDatabase();
     res.json({ 
@@ -210,8 +334,8 @@ app.get('/api/students/lookup/:soCCCD', (req, res) => {
   }
 });
 
-// 5. Cập nhật trạng thái duyệt
-app.put('/api/students/:id/status', (req, res) => {
+// 5. Cập nhật trạng thái duyệt - CẦN ĐĂNG NHẬP
+app.put('/api/students/:id/status', requireAdmin, (req, res) => {
   try {
     const { trangThai, ghiChu } = req.body;
     
@@ -252,8 +376,8 @@ app.put('/api/students/:id/status', (req, res) => {
   }
 });
 
-// 6. Xóa thí sinh (cho admin)
-app.delete('/api/students/:id', (req, res) => {
+// 6. Xóa thí sinh (cho admin) - CẦN ĐĂNG NHẬP
+app.delete('/api/students/:id', requireAdmin, (req, res) => {
   try {
     const db = readDatabase();
     const studentIndex = db.students.findIndex(s => s.id === req.params.id);
@@ -290,8 +414,8 @@ app.delete('/api/students/:id', (req, res) => {
   }
 });
 
-// 7. Thống kê
-app.get('/api/statistics', (req, res) => {
+// 7. Thống kê - CẦN ĐĂNG NHẬP
+app.get('/api/statistics', requireAdmin, (req, res) => {
   try {
     const db = readDatabase();
     const total = db.students.length;
