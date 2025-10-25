@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký điểm thi năng khiếu - Vẽ Mỹ thuật</title>
+    <title>Hệ thống tiếp nhận điểm thi năng khiếu - Trường ĐH Kiến trúc Đà Nẵng</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #dc143c 0%, #8b0000 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -23,24 +23,64 @@
             margin: 0 auto;
         }
 
+        .university-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            border-bottom: 5px solid #dc143c;
+        }
+
+        .university-header .logo {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+
+        .university-header .text-content {
+            text-align: center;
+        }
+
+        .university-header h1 {
+            color: #dc143c;
+            font-size: 1.8em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .university-header .subtitle {
+            color: #8b0000;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
         .header {
             background: white;
             padding: 30px;
-            border-radius: 15px;
+            border-radius: 0 0 15px 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             text-align: center;
             margin-bottom: 30px;
         }
 
         .header h1 {
-            color: #667eea;
+            color: #dc143c;
             margin-bottom: 10px;
             font-size: 2em;
+            font-weight: 700;
         }
 
         .header p {
             color: #666;
-            font-size: 1.1em;
+            font-size: 1.05em;
+            line-height: 1.6;
         }
 
         .nav-tabs {
@@ -55,12 +95,12 @@
             min-width: 200px;
             padding: 15px 30px;
             background: white;
-            border: none;
+            border: 2px solid #dc143c;
             border-radius: 10px;
             cursor: pointer;
             font-size: 1.1em;
             font-weight: 600;
-            color: #666;
+            color: #dc143c;
             transition: all 0.3s;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
@@ -68,11 +108,13 @@
         .nav-tab:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            background: #fff5f5;
         }
 
         .nav-tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #dc143c 0%, #8b0000 100%);
             color: white;
+            border-color: #8b0000;
         }
 
         .tab-content {
@@ -117,13 +159,38 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #dc143c;
         }
 
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
+        }
+
+        .checkbox-group {
+            margin: 25px 0;
+            padding: 20px;
+            background: #fff5f5;
+            border: 2px solid #dc143c;
+            border-radius: 8px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: #dc143c;
         }
 
         .btn {
@@ -137,14 +204,20 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #dc143c 0%, #8b0000 100%);
             color: white;
             width: 100%;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 20px rgba(220, 20, 60, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-success {
@@ -153,7 +226,7 @@
         }
 
         .btn-danger {
-            background: #dc3545;
+            background: #dc143c;
             color: white;
         }
 
@@ -198,7 +271,7 @@
         }
 
         table th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #dc143c 0%, #8b0000 100%);
             color: white;
             padding: 15px;
             text-align: left;
@@ -211,7 +284,7 @@
         }
 
         table tr:hover {
-            background: #f8f9fa;
+            background: #fff5f5;
         }
 
         .badge {
@@ -245,7 +318,7 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #dc143c 0%, #8b0000 100%);
             color: white;
             padding: 25px;
             border-radius: 10px;
@@ -294,7 +367,7 @@
         }
 
         .modal-header h2 {
-            color: #667eea;
+            color: #dc143c;
         }
 
         .modal-buttons {
@@ -344,7 +417,7 @@
         }
 
         .lookup-result h3 {
-            color: #667eea;
+            color: #dc143c;
             margin-bottom: 15px;
         }
 
@@ -362,6 +435,24 @@
         }
 
         @media (max-width: 768px) {
+            .university-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .university-header .logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .university-header h1 {
+                font-size: 1.3em;
+            }
+
+            .university-header .subtitle {
+                font-size: 0.75em;
+            }
+
             .form-row {
                 grid-template-columns: 1fr;
             }
@@ -378,9 +469,17 @@
 </head>
 <body>
     <div class="container">
+        <div class="university-header">
+            <img src="logo-dhktdn.png" alt="Logo DAU" class="logo">
+            <div class="text-content">
+                <h1>TRƯỜNG ĐẠI HỌC KIẾN TRÚC ĐÀ NẴNG</h1>
+                <div class="subtitle">DA NANG ARCHITECTURE UNIVERSITY</div>
+            </div>
+        </div>
+
         <div class="header">
-            <h1>🎨 Hệ thống tiếp nhận điểm thi năng khiếu</h1>
-            <p>Tổ hợp có môn Vẽ Mỹ thuật</p>
+            <h1>🎨 Hệ thống tiếp nhận điểm thi năng khiếu (Vẽ mỹ thuật)</h1>
+            <p>Dành cho thí sinh có nguyện vọng vào các ngành: Kiến trúc, Thiết kế nội thất, Quy hoạch vùng và đô thị, Thiết kế đồ họa.</p>
             <div id="adminStatus" style="margin-top: 10px;"></div>
         </div>
 
@@ -393,7 +492,7 @@
         <!-- Tab Đăng ký -->
         <div id="register" class="tab-content active">
             <div class="form-container">
-                <h2 style="color: #667eea; margin-bottom: 30px;">Đăng ký điểm thi năng khiếu</h2>
+                <h2 style="color: #dc143c; margin-bottom: 30px;">Đăng ký nộp điểm thi năng khiếu</h2>
                 
                 <div id="registerMessage"></div>
 
@@ -429,11 +528,11 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Điểm Năng khiếu 1 <span style="color: red;">*</span></label>
+                            <label>Điểm Năng khiếu 1 (Vẽ tĩnh vật, Vẽ đầu tượng) <span style="color: red;">*</span></label>
                             <input type="number" id="diemNK1" name="diemNK1" required min="0" max="10" step="0.01" placeholder="0.00">
                         </div>
                         <div class="form-group">
-                            <label>Điểm Năng khiếu 2 <span style="color: red;">*</span></label>
+                            <label>Điểm Năng khiếu 2 (Bố cục màu, trang trí màu) <span style="color: red;">*</span></label>
                             <input type="number" id="diemNK2" name="diemNK2" required min="0" max="10" step="0.01" placeholder="0.00">
                         </div>
                     </div>
@@ -447,7 +546,14 @@
                         <span class="file-name" id="fileName">Chưa chọn file</span>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Đăng ký</button>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="confirmCommitment" name="confirmCommitment" required>
+                        <label for="confirmCommitment">
+                            Tôi cam kết điểm đã nộp là chính xác và chịu trách nhiệm pháp lý về thông tin kê khai.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Xác nhận nộp điểm</button>
                 </form>
             </div>
         </div>
@@ -455,7 +561,7 @@
         <!-- Tab Tra cứu -->
         <div id="lookup" class="tab-content">
             <div class="lookup-container">
-                <h2 style="color: #667eea; margin-bottom: 30px;">Tra cứu thông tin</h2>
+                <h2 style="color: #dc143c; margin-bottom: 30px;">Tra cứu thông tin</h2>
                 
                 <div id="lookupMessage"></div>
 
@@ -473,7 +579,7 @@
         <!-- Tab Quản lý -->
         <div id="admin" class="tab-content">
             <div class="admin-container">
-                <h2 style="color: #667eea; margin-bottom: 30px;">Quản lý thí sinh</h2>
+                <h2 style="color: #dc143c; margin-bottom: 30px;">Quản lý thí sinh</h2>
 
                 <div class="stats-container">
                     <div class="stat-card">
