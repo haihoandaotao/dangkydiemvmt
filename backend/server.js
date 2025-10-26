@@ -16,7 +16,7 @@ const ADMIN_PASSWORD = 'admin123'; // Nên thay đổi mật khẩu này!
 
 // Cấu hình SendGrid
 const EMAIL_CONFIG = {
-  from: 'phongdaotao@dau.edu.vn',
+  from: 'haihoandau@gmail.com',
   fromName: 'Phòng Đào tạo - ĐH Kiến trúc Đà Nẵng'
 };
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
@@ -64,7 +64,7 @@ async function sendConfirmationEmail(studentData) {
       from: {
         email: EMAIL_CONFIG.from,
         name: EMAIL_CONFIG.fromName
-      },
+      }      npm install @sendgrid/mail --save,
       subject: 'Xác nhận nộp điểm VMT thành công',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #dc143c; border-radius: 10px;">
