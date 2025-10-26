@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,22 +14,12 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin123'; // Nên thay đổi mật khẩu này!
 
-// Cấu hình Email
+// Cấu hình SendGrid
 const EMAIL_CONFIG = {
   from: 'phongdaotao@dau.edu.vn',
   fromName: 'Phòng Đào tạo - ĐH Kiến trúc Đà Nẵng'
 };
-
-// Tạo transporter cho nodemailer (cần cấu hình SMTP)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER || 'phongdaotao@dau.edu.vn',
-    pass: process.env.EMAIL_PASSWORD || '' // Cần set trong env variables
-  }
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 // Session store đơn giản (trong production nên dùng Redis hoặc database)
 const sessions = new Map();
@@ -49,14 +39,12 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // Middleware kiểm tra admin
 function requireAdmin(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  
   if (!token || !sessions.has(token)) {
     return res.status(401).json({ 
       success: false, 
       message: 'Unauthorized - Vui lòng đăng nhập admin!' 
     });
   }
-  
   const session = sessions.get(token);
   if (Date.now() > session.expiresAt) {
     sessions.delete(token);
@@ -65,16 +53,18 @@ function requireAdmin(req, res, next) {
       message: 'Session hết hạn - Vui lòng đăng nhập lại!' 
     });
   }
-  
   next();
 }
 
-// Hàm gửi email xác nhận
+// Hàm gửi email xác nhận bằng SendGrid
 async function sendConfirmationEmail(studentData) {
   try {
-    const mailOptions = {
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.from}>`,
+    const msg = {
       to: studentData.email,
+      from: {
+        email: EMAIL_CONFIG.from,
+        name: EMAIL_CONFIG.fromName
+      },
       subject: 'Xác nhận nộp điểm VMT thành công',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #dc143c; border-radius: 10px;">
@@ -82,13 +72,9 @@ async function sendConfirmationEmail(studentData) {
             <h2 style="color: #dc143c; margin-bottom: 5px;">TRƯỜNG ĐẠI HỌC KIẾN TRÚC ĐÀ NẴNG</h2>
             <p style="color: #8b0000; font-weight: 600;">DA NANG ARCHITECTURE UNIVERSITY</p>
           </div>
-          
           <h3 style="color: #dc143c; text-align: center;">✅ XÁC NHẬN NỘP ĐIỂM VMT THÀNH CÔNG</h3>
-          
           <p>Kính chào <strong>${studentData.hoTen}</strong>,</p>
-          
           <p>Hệ thống đã tiếp nhận thông tin đăng ký điểm thi năng khiếu Vẽ Mỹ thuật của bạn với các thông tin sau:</p>
-          
           <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Họ và tên:</strong> ${studentData.hoTen}</p>
             <p><strong>Ngày sinh:</strong> ${new Date(studentData.ngaySinh).toLocaleDateString('vi-VN')}</p>
@@ -101,16 +87,13 @@ async function sendConfirmationEmail(studentData) {
             <p><strong>Trạng thái:</strong> <span style="color: #ffc107; font-weight: 600;">${studentData.trangThai}</span></p>
             <p><strong>Ngày nộp:</strong> ${new Date(studentData.ngayNop).toLocaleString('vi-VN')}</p>
           </div>
-          
           <p style="color: #dc143c; font-weight: 600;">📌 Lưu ý:</p>
           <ul>
             <p>- Bạn có thể tra cứu kết quả duyệt bằng số CCCD tại trang web</p>
             <p>- Thông tin sẽ được phòng Đào tạo kiểm tra và duyệt trong thời gian sớm nhất</p>
             <p>- Nếu có sai sót, vui lòng liên hệ Phòng Đào tạo để được hỗ trợ</p>
           </ul>
-          
           <hr style="border: 1px solid #ddd; margin: 20px 0;">
-          
           <p style="font-size: 0.9em; color: #666; text-align: center;">
             <strong>Phòng Đào tạo - Trường Đại học Kiến trúc Đà Nẵng</strong><br>
             Email: phongdaotao@dau.edu.vn | Website: www.dau.edu.vn
@@ -118,10 +101,9 @@ async function sendConfirmationEmail(studentData) {
         </div>
       `
     };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    const info = await sgMail.send(msg);
+    console.log('✅ Email sent successfully:', info[0]?.messageId || info);
+    return { success: true, messageId: info[0]?.messageId || '' };
   } catch (error) {
     console.error('❌ Error sending email:', error);
     return { success: false, error: error.message };
