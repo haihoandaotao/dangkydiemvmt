@@ -64,7 +64,7 @@ async function sendConfirmationEmail(studentData) {
       from: {
         email: EMAIL_CONFIG.from,
         name: EMAIL_CONFIG.fromName
-      }      npm install @sendgrid/mail --save,
+  },
       subject: 'Xác nhận nộp điểm VMT thành công',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #dc143c; border-radius: 10px;">
