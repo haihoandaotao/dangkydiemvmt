@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const sgMail = require('@sendgrid/mail');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,12 +14,20 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin123'; // Nên thay đổi mật khẩu này!
 
-// Cấu hình SendGrid
+// Cấu hình SMTP cho email
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER || 'haihoandau@gmail.com',
+    pass: process.env.SMTP_PASS || '' // App Password từ Gmail
+  }
+});
+
 const EMAIL_CONFIG = {
-  from: 'haihoandau@gmail.com',
-  fromName: 'Phòng Đào tạo - ĐH Kiến trúc Đà Nẵng'
+  from: '"Phòng Đào tạo - ĐH Kiến trúc Đà Nẵng" <haihoandau@gmail.com>'
 };
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 // Session store đơn giản (trong production nên dùng Redis hoặc database)
 const sessions = new Map();
@@ -56,15 +64,12 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Hàm gửi email xác nhận bằng SendGrid
+// Hàm gửi email xác nhận bằng SMTP
 async function sendConfirmationEmail(studentData) {
   try {
-    const msg = {
+    const mailOptions = {
+      from: EMAIL_CONFIG.from,
       to: studentData.email,
-      from: {
-        email: EMAIL_CONFIG.from,
-        name: EMAIL_CONFIG.fromName
-  },
       subject: 'Xác nhận nộp điểm VMT thành công',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #dc143c; border-radius: 10px;">
@@ -101,9 +106,10 @@ async function sendConfirmationEmail(studentData) {
         </div>
       `
     };
-    const info = await sgMail.send(msg);
-    console.log('✅ Email sent successfully:', info[0]?.messageId || info);
-    return { success: true, messageId: info[0]?.messageId || '' };
+    
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully:', info.messageId);
+    return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('❌ Error sending email:', error);
     return { success: false, error: error.message };

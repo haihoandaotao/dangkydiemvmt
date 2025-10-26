@@ -7,7 +7,15 @@
     "dev": "cd backend && npm run dev",
     "install-backend": "cd backend && npm install"
   },
-  "keywords": ["web app", "education", "exam", "registration"],
+  "keywords": [
+    "web app",
+    "education",
+    "exam",
+    "registration"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.6"
+  }
 }
